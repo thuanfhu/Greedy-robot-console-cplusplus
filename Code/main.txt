@@ -1,0 +1,200 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+void printMaze(vector<vector<int>> maze, int robot1X, int robot1Y, int robot2X, int robot2Y, int score1, int score2) {
+    for (int i = 0; i < maze.size(); i++) {
+        for (int j = 0; j < maze[i].size(); j++) {
+            if (i == robot1X && j == robot1Y) {
+                cout << "A ";
+            } else if (i == robot2X && j == robot2Y) {
+                cout << "B ";
+            } else if (maze[i][j] == -1) {
+                cout << "O ";
+            } else if (maze[i][j] == -2) {
+                cout << "X ";
+            } else {
+                cout << maze[i][j] << " ";
+            }
+        }
+        cout << endl;
+    }
+    cout << "Score: " << score1 << " - " << score2 << endl;
+}
+
+bool isMoveValid(int currentX, int currentY, int newX, int newY, vector<vector<int>> maze, int robot1X, int robot1Y, int robot2X, int robot2Y) {
+    if (newX < 0 || newX >= maze.size() || newY < 0 || newY >= maze[0].size()) {
+        // cout << "Robot has come out of the maze" << endl;
+        return false;
+    }
+
+    if (maze[newX][newY] == -1 || maze[newX][newY] == -2) {
+        // cout << "This box already passed" << endl;
+        return false;
+    }
+
+    if ((newX == robot1X && newY == robot1Y) || (newX == robot2X && newY == robot2Y)) {
+        // cout << "Robot cannot move into the other robot's box" << endl;
+        return false;
+    }
+
+    return true;
+}
+
+int main() {
+    int numRows, numCols;
+    cout << "Enter the number of rows and columns of the maze: ";
+    cin >> numRows;
+    cout << "Enter the number of cols and columns of the maze: ";
+    cin >> numCols;
+    vector<vector<int>> maze(numRows, vector<int>(numCols));
+    
+    // Populate maze with values
+    int total_box_count = 0;
+    for (int i = 0; i < numRows; i++) {
+        for (int j = 0; j < numCols; j++) {
+            maze[i][j] = total_box_count + 1;
+            total_box_count++;
+        }
+    }
+    
+    int robot1X = 0, robot1Y = 0, robot2X = 0, robot2Y = 1;
+    cout << "Enter the x position for robot 1: ";
+    cin >> robot1X;
+    cout << "Enter the y position for robot 1: ";
+    cin >> robot1Y;
+    cout << "Enter the x position for robot 2: ";
+    cin >> robot2X;
+    cout << "Enter the y position for robot 2: ";
+    cin >> robot2Y;
+    
+    int score1 = maze[robot1X][robot1Y], score2 = maze[robot2X][robot2Y];
+
+    maze[robot1X][robot1Y] = -2;
+    maze[robot2X][robot2Y] = -1;
+
+    printMaze(maze, robot1X, robot1Y, robot2X, robot2Y, score1, score2);
+
+    while (true) {
+        char direction;
+        cout << "Enter direction for robot 1 (W/A/S/D): ";
+        cin >> direction;
+
+        int newX, newY;
+        if (direction == 'W') {
+            newX = robot1X - 1;
+            newY = robot1Y;
+        } else if (direction == 'A') {
+            newX = robot1X;
+            newY = robot1Y - 1;
+        } else if (direction == 'S') {
+            newX = robot1X + 1;
+            newY = robot1Y;
+        } else if (direction == 'D') {
+            newX = robot1X;
+            newY = robot1Y + 1;
+        } else {
+            cout << "Invalid direction. Please enter W/A/S/D." << endl;
+            continue;
+        }
+        
+        bool canMove1 = false;
+        if (robot1X > 0 && isMoveValid(robot1X, robot1Y, robot1X - 1, robot1Y, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            canMove1 = true;
+        } else if (robot1Y > 0 && isMoveValid(robot1X, robot1Y, robot1X, robot1Y - 1, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            canMove1 = true;
+        } else if (robot1X < maze.size() - 1 && isMoveValid(robot1X, robot1Y, robot1X + 1, robot1Y, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            canMove1 = true;
+        } else if (robot1Y < maze[0].size() - 1 && isMoveValid(robot1X, robot1Y, robot1X, robot1Y + 1, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            canMove1 = true;
+        }
+        if (!canMove1) {
+            cout << "Robot 1 cannot move anymore" << endl;
+            // score2 = 136 - score1;
+            break;
+        }
+        
+       
+        if (!isMoveValid(robot1X, robot1Y, newX, newY, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            cout << "This box already passed, Robot cannot move into the other robot's box OR Robot has come out of the maze" << endl;
+            continue;
+        }
+
+        score1 = score1 + maze[newX][newY];
+        if (maze[newX][newY] != -2) {
+            maze[newX][newY] = -2;
+        }
+        robot1X = newX;
+        robot1Y = newY;
+        printMaze(maze, robot1X, robot1Y, robot2X, robot2Y, score1, score2);
+
+        cout << "Enter direction for robot 2 (W/A/S/D): ";
+        cin >> direction;
+
+        if (direction == 'W') {
+            newX = robot2X - 1;
+            newY = robot2Y;
+        } else if (direction == 'A') {
+            newX = robot2X;
+            newY = robot2Y - 1;
+        } else if (direction == 'S') {
+            newX = robot2X + 1;
+            newY = robot2Y;
+        } else if (direction == 'D') {
+            newX = robot2X;
+            newY = robot2Y + 1;
+        } else {
+            cout << "Invalid direction. Please enter W/A/S/D." << endl;
+            continue;
+        }
+        
+        bool canMove2 = false;
+        if (robot2X > 0 && isMoveValid(robot2X, robot2Y, robot2X - 1, robot2Y, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            canMove2 = true;
+        } else if (robot2Y > 0 && isMoveValid(robot2X, robot2Y, robot2X, robot2Y - 1, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            canMove2 = true;
+        } else if (robot2X < maze.size() - 1 && isMoveValid(robot2X, robot2Y, robot2X + 1, robot2Y, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            canMove2 = true;
+        } else if (robot2Y < maze[0].size() - 1 && isMoveValid(robot2X, robot2Y, robot2X, robot2Y + 1, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            canMove2 = true;
+        }
+
+        if (!canMove2) {
+            cout << "Robot 2 cannot move anymore" << endl;
+            // score1 = total_box_count - score2;
+            break;
+        }
+       
+        if (!isMoveValid(robot2X, robot2Y, newX, newY, maze, robot1X, robot1Y, robot2X, robot2Y)) {
+            cout << "This box already passed" << endl;
+            continue;
+        }
+
+        score2 = score2 + maze[newX][newY];
+        if (maze[newX][newY] != -1) {
+            maze[newX][newY] = -1;
+        }
+        robot2X = newX;
+        robot2Y = newY;
+
+        printMaze(maze, robot1X, robot1Y, robot2X, robot2Y, score1, score2);
+        
+        if ((score1 + score2) == (total_box_count-2)) {
+            // terminate the game
+            cout << "Both robot visited all box" << endl;
+            break;
+        }
+        
+    }
+
+    if (score1 > score2) {
+        cout << "Robot 1 wins!" << endl;
+    } else if (score2 > score1) {
+        cout << "Robot 2 wins!" << endl;
+    } else {
+        cout << "It's a tie!" << endl;
+    }
+
+    return 0;
+}
